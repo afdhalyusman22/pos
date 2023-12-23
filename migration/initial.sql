@@ -8,15 +8,16 @@ CREATE TABLE public."User" (
 );
 
 
-CREATE TABLE public.Tax (
-	id uuid NOT NULL,
+CREATE TABLE public."Tax" (
+	id uuid DEFAULT gen_random_uuid() NOT NULL,
 	"name" text NOT NULL,
 	rate numeric NOT NULL,
 	CONSTRAINT tax_pkey PRIMARY KEY (id)
 );
 
 
-CREATE TABLE public.Product (
+
+CREATE TABLE public."Product" (
 	id uuid NOT NULL,
 	"name" text NOT NULL,
 	sku text NULL,
@@ -25,6 +26,7 @@ CREATE TABLE public.Product (
 	item_cost numeric NOT NULL,
 	item_price numeric NOT NULL,
 	stock numeric NOT NULL,
-	tax_id uuid NOT NULL,
-	CONSTRAINT product_pkey PRIMARY KEY (id)
+	tax_id uuid NULL,
+	CONSTRAINT product_pkey PRIMARY KEY (id),
+	CONSTRAINT fk_prdtax FOREIGN KEY(tax_id) REFERENCES public."Tax"(id)
 );

@@ -17,3 +17,23 @@ model User {
   password  String
   company_name  String
 }
+
+model Tax {
+  id String @default(uuid()) @id
+  name String
+  rate Decimal
+  product Product[]
+}
+
+model Product {
+  id String @default(uuid()) @id
+  name String
+  sku String?
+  uom String
+  category String
+  item_cost Decimal
+  item_price Decimal
+  stock Int
+  tax Tax? @relation(fields: [tax_id], references: [id])
+  tax_id String?
+}
