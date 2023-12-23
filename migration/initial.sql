@@ -26,7 +26,7 @@ CREATE TABLE public."Product" (
 	item_cost numeric NOT NULL,
 	item_price numeric NOT NULL,
 	stock numeric NOT NULL,
-	tax_id uuid NULL,
+	tax_id uuid NOT NULL,
 	CONSTRAINT product_pkey PRIMARY KEY (id),
 	CONSTRAINT fk_prdtax FOREIGN KEY(tax_id) REFERENCES public."Tax"(id)
 );

@@ -10,50 +10,115 @@ export class ProductService {
     this.prisma = _prisma;
   }
   async create(createProductDto: CreateProductDto) {
-    if (createProductDto.taxId != null && createProductDto.taxId != '') {
-      const tax = await this.prisma.tax.findFirst({
+    const { sku, category, itemCost, itemName, itemPrice, taxId, uom } =
+      createProductDto;
+    const tax = await this.prisma.tax.findFirst({
+      where: {
+        id: taxId,
+      },
+    });
+    if (!tax) {
+      throw new HttpException('tax id not found', HttpStatus.BAD_REQUEST);
+    }
+
+    if (sku != null && sku != undefined && sku != '') {
+      const existSku = await this.prisma.product.findFirst({
         where: {
-          id: createProductDto.taxId,
+          sku: sku,
         },
       });
-      if (!tax) {
-        throw new HttpException('tax id not found', HttpStatus.BAD_REQUEST);
+      if (existSku) {
+        throw new HttpException('sku already exist', HttpStatus.BAD_REQUEST);
       }
     }
-    const create = await this.prisma.product.create({
+    const product = await this.prisma.product.create({
       data: {
-        sku: createProductDto.sku,
-        name: createProductDto.itemName,
-        uom: createProductDto.uom,
-        category: createProductDto.category,
-        item_cost: createProductDto.itemCost,
-        item_price: createProductDto.itemPrice,
-        tax_id: createProductDto.taxId,
-        stock: createProductDto.stock,
+        sku: sku,
+        name: itemName,
+        uom: uom,
+        category: category,
+        item_cost: itemCost,
+        item_price: itemPrice,
+        tax_id: taxId,
       },
     });
     return {
       data: {
-        id: create.id,
+        id: product.id,
         ...createProductDto,
       },
     };
   }
 
+  async find(id: string) {
+    const product = await this.prisma.product.findFirst({
+      where: {
+        id: id,
+      },
+    });
+    return {
+      data: product,
+    };
+  }
+
   async findAll() {
-    //const product = await this.prisma.product.findAll();
-    return '';
+    const products = await this.prisma.product.findMany();
+    return {
+      data: products,
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  async update(id: string, updateProductDto: UpdateProductDto) {
+    const { category, itemCost, itemName, itemPrice, taxId, uom } =
+      updateProductDto;
+    const product = await this.prisma.product.findFirst({
+      where: {
+        id: id,
+      },
+    });
+
+    if (!product) {
+      throw new HttpException('product id not found', HttpStatus.BAD_REQUEST);
+    }
+
+    const update = await this.prisma.product.update({
+      where: {
+        id: id,
+      },
+      data: {
+        name: itemName,
+        uom: uom,
+        category: category,
+        item_cost: itemCost,
+        item_price: itemPrice,
+        tax_id: taxId,
+      },
+    });
+    return {
+      data: {
+        id: update.id,
+        ...updateProductDto,
+      },
+    };
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
-  }
+  async remove(id: string) {
+    const product = await this.prisma.product.findFirst({
+      where: {
+        id: id,
+      },
+    });
 
-  remove(id: number) {
-    return `This action removes a #${id} product`;
+    if (!product) {
+      throw new HttpException('product id not found', HttpStatus.BAD_REQUEST);
+    }
+    const remove = await this.prisma.product.delete({
+      where: {
+        id: id,
+      },
+    });
+    return {
+      message: `success delete product id ${remove.id}`,
+    };
   }
 }
