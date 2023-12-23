@@ -4,15 +4,20 @@ import { LoginDto } from './dto/login-dto';
 import { formatResponse } from '../utils/wrapper';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
-import { sign } from 'jsonwebtoken';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
   prisma: PrismaService;
+  jwtService: JwtService;
   bcrypt: any;
-  constructor(private _prisma: PrismaService) {
+  constructor(
+    private _prisma: PrismaService,
+    private _jwtService: JwtService,
+  ) {
     this.prisma = _prisma;
     this.bcrypt = bcrypt;
+    this.jwtService = _jwtService;
   }
   async register(registerDto: RegisterDto) {
     const saltOrRounds = 10;
@@ -62,9 +67,7 @@ export class UserService {
       userId: user.user_id,
       company_name: user.company_name,
     };
-    const token = sign(payload, process.env.SECRET_KEY, {
-      expiresIn: process.env.EXPIRES_IN,
-    });
+    const token = await this.jwtService.signAsync(payload);
 
     const res = {
       accessToken: token,
