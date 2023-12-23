@@ -1,3 +1,5 @@
+CREATE DATABASE pos;
+
 CREATE TABLE public."User" (
 	user_id uuid NOT NULL,
 	email text NOT NULL,

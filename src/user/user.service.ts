@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login-dto';
-import { formatResponse } from '../utils/wrapper';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -30,7 +29,7 @@ export class UserService {
       },
     });
     if (user) {
-      return formatResponse('Email already exist', null);
+      throw new HttpException('Email already exist', HttpStatus.BAD_REQUEST);
     }
 
     const hashPwd = await bcrypt.hash(password, saltOrRounds);
@@ -43,7 +42,8 @@ export class UserService {
         password: hashPwd,
       },
     });
-    return formatResponse('success', { userId: createUser.user_id });
+
+    return { data: { userId: createUser.user_id } };
   }
 
   async login(loginDto: LoginDto) {
@@ -55,12 +55,15 @@ export class UserService {
       },
     });
     if (!user) {
-      return formatResponse('User not found', null);
+      throw new HttpException('user not found', HttpStatus.BAD_REQUEST);
     }
 
     const cekPass = await bcrypt.compare(password, user.password);
     if (!cekPass) {
-      return formatResponse('User/Password incorrent', null);
+      throw new HttpException(
+        'user or password incorrect',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const payload = {
@@ -78,6 +81,6 @@ export class UserService {
         companyName: user.company_name,
       },
     };
-    return formatResponse('success', res);
+    return res;
   }
 }
