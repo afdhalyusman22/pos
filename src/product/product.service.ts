@@ -7,20 +7,27 @@ import {
 } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { SequenceService } from 'src/sequence/sequence.service';
 
 @Injectable()
 export class ProductService {
-  prisma: PrismaService;
-  constructor(private _prisma: PrismaService) {
-    this.prisma = _prisma;
+  _prisma: PrismaService;
+  _sequence: SequenceService;
+  constructor(
+    private prisma: PrismaService,
+    private sequence: SequenceService,
+  ) {
+    this._prisma = prisma;
+    this._sequence = sequence;
   }
   async create(
     createProductDto: CreateProductDto,
     userId: string,
   ): Promise<ProductResponseDto> {
-    const { sku, category, itemCost, itemName, itemPrice, taxId, uom } =
+    const { category, itemCost, itemName, itemPrice, taxId, uom } =
       createProductDto;
-    const tax = await this.prisma.tax.findFirst({
+    let { sku } = createProductDto;
+    const tax = await this._prisma.tax.findFirst({
       where: {
         id: taxId,
       },
@@ -30,7 +37,7 @@ export class ProductService {
     }
 
     if (sku != null && sku != undefined && sku != '') {
-      const existSku = await this.prisma.product.findFirst({
+      const existSku = await this._prisma.product.findFirst({
         where: {
           sku: sku,
         },
@@ -38,8 +45,11 @@ export class ProductService {
       if (existSku) {
         throw new HttpException('sku already exist', HttpStatus.BAD_REQUEST);
       }
+    } else {
+      sku = await this._sequence.generate('SKU');
     }
-    const product = await this.prisma.product.create({
+
+    const product = await this._prisma.product.create({
       data: {
         sku: sku,
         name: itemName,
@@ -55,6 +65,7 @@ export class ProductService {
     const res: ProductResponseDto = {
       data: {
         id: product.id,
+        sku: sku,
         ...createProductDto,
       },
     };
@@ -62,7 +73,7 @@ export class ProductService {
   }
 
   async find(id: string, userId: string): Promise<ProductResponseDto> {
-    const product = await this.prisma.product.findFirst({
+    const product = await this._prisma.product.findFirst({
       where: {
         id: id,
       },
@@ -94,7 +105,7 @@ export class ProductService {
   }
 
   async findAll(userId: string): Promise<ProductAllResponseDto> {
-    const products = await this.prisma.product.findMany({
+    const products = await this._prisma.product.findMany({
       where: {
         created_by: userId,
       },
@@ -125,7 +136,7 @@ export class ProductService {
   ): Promise<ProductResponseDto> {
     const { category, itemCost, itemName, itemPrice, taxId, uom } =
       updateProductDto;
-    const product = await this.prisma.product.findFirst({
+    const product = await this._prisma.product.findFirst({
       where: {
         id: id,
       },
@@ -142,7 +153,7 @@ export class ProductService {
       );
     }
 
-    const update = await this.prisma.product.update({
+    const update = await this._prisma.product.update({
       where: {
         id: id,
       },
@@ -167,7 +178,7 @@ export class ProductService {
   }
 
   async remove(id: string, userId: string) {
-    const product = await this.prisma.product.findFirst({
+    const product = await this._prisma.product.findFirst({
       where: {
         id: id,
       },
@@ -183,7 +194,7 @@ export class ProductService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    const remove = await this.prisma.product.delete({
+    const remove = await this._prisma.product.delete({
       where: {
         id: id,
       },

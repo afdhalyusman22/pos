@@ -7,23 +7,23 @@ import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
-  prisma: PrismaService;
-  jwtService: JwtService;
-  bcrypt: any;
+  _prisma: PrismaService;
+  _jwtService: JwtService;
+  _bcrypt: any;
   constructor(
-    private _prisma: PrismaService,
-    private _jwtService: JwtService,
+    private prisma: PrismaService,
+    private jwtService: JwtService,
   ) {
-    this.prisma = _prisma;
-    this.bcrypt = bcrypt;
-    this.jwtService = _jwtService;
+    this._prisma = prisma;
+    this._bcrypt = bcrypt;
+    this._jwtService = jwtService;
   }
   async register(registerDto: RegisterDto): Promise<RegisterResponseDto> {
     const saltOrRounds = 10;
     const { email, fullName, password, companyName } = registerDto;
     const emailLower = email.toLowerCase();
     // check by email
-    const user = await this.prisma.user.findFirst({
+    const user = await this._prisma.user.findFirst({
       where: {
         email: emailLower,
       },
@@ -32,9 +32,9 @@ export class UserService {
       throw new HttpException('Email already exist', HttpStatus.BAD_REQUEST);
     }
 
-    const hashPwd = await bcrypt.hash(password, saltOrRounds);
+    const hashPwd = await this._bcrypt.hash(password, saltOrRounds);
 
-    const createUser = await this.prisma.user.create({
+    const createUser = await this._prisma.user.create({
       data: {
         email: emailLower,
         fullname: fullName,
@@ -53,7 +53,7 @@ export class UserService {
   async login(loginDto: LoginDto): Promise<LoginResponseDto> {
     const { email, password } = loginDto;
     const emailLower = email.toLowerCase();
-    const user = await this.prisma.user.findFirst({
+    const user = await this._prisma.user.findFirst({
       where: {
         email: emailLower,
       },
@@ -62,7 +62,7 @@ export class UserService {
       throw new HttpException('user not found', HttpStatus.BAD_REQUEST);
     }
 
-    const cekPass = await bcrypt.compare(password, user.password);
+    const cekPass = await this._bcrypt.compare(password, user.password);
     if (!cekPass) {
       throw new HttpException(
         'user or password incorrect',
@@ -74,7 +74,7 @@ export class UserService {
       userId: user.user_id,
       company_name: user.company_name,
     };
-    const token = await this.jwtService.signAsync(payload);
+    const token = await this._jwtService.signAsync(payload);
 
     const res: LoginResponseDto = {
       accessToken: token,

@@ -25,6 +25,14 @@ model Tax {
   product Product[]
 }
 
+model Sequence {
+  id String @default(uuid()) @id
+  type String
+  times String
+  latest_seq Int
+  created_at DateTime @default(now())
+}
+
 model Product {
   id String @default(uuid()) @id
   name String

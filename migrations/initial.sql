@@ -31,3 +31,12 @@ CREATE TABLE public."Product" (
 	created_at timestamp not null,
 	CONSTRAINT product_pkey PRIMARY KEY (id)
 );
+
+CREATE TABLE public."Sequence" (
+	id uuid NOT NULL,
+	"type" text NOT NULL,
+	"times" text NOT NULL,
+	latest_seq int NOT NULL,	
+	created_at timestamp not null,
+	CONSTRAINT sequence_pkey PRIMARY KEY (id)
+);

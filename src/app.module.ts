@@ -5,6 +5,7 @@ import { UserModule } from './user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './utils/constants';
 import { ProductModule } from './product/product.module';
+import { SequenceModule } from './sequence/sequence.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ProductModule } from './product/product.module';
       signOptions: { expiresIn: jwtConstants.expiresIn },
     }),
     ProductModule,
+    SequenceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
