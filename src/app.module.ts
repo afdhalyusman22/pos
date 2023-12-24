@@ -7,6 +7,7 @@ import { jwtConstants } from './utils/constants';
 import { ProductModule } from './product/product.module';
 import { SequenceModule } from './sequence/sequence.module';
 import { PurchaseModule } from './purchase/purchase.module';
+import { SalesModule } from './sales/sales.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { PurchaseModule } from './purchase/purchase.module';
     ProductModule,
     SequenceModule,
     PurchaseModule,
+    SalesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

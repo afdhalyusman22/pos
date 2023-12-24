@@ -1,17 +1,17 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
-  CreatePurchaseDto,
-  CreatePurchaseResponse,
-  PurchaseResponseDto,
+  CreateSalesDto,
+  CreateSalesResponse,
+  SalesResponseDto,
   ProductItemResponseDto,
-  DetailPurchaseResponse,
-  AllPurchaseResponse,
-} from './dto/purchase.dto';
+  DetailSalesResponse,
+  AllSalesResponse,
+} from './dto/sales.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { SequenceService } from '../sequence/sequence.service';
 
 @Injectable()
-export class PurchaseService {
+export class SalesService {
   _prisma: PrismaService;
   _sequence: SequenceService;
   constructor(
@@ -23,25 +23,25 @@ export class PurchaseService {
   }
 
   async create(
-    createPurchaseDto: CreatePurchaseDto,
+    createSalesDto: CreateSalesDto,
     userId: string,
-  ): Promise<CreatePurchaseResponse> {
-    const { invoiceDate, itemLines, note } = createPurchaseDto;
-    let { invoiceNo } = createPurchaseDto;
+  ): Promise<CreateSalesResponse> {
+    const { invoiceDate, itemLines, note } = createSalesDto;
+    let { invoiceNo } = createSalesDto;
     if (invoiceNo != null && invoiceNo != undefined && invoiceNo != '') {
-      const existInvoice = await this._prisma.purchase.findFirst({
+      const existInvoice = await this._prisma.sales.findFirst({
         where: {
           invoice_no: invoiceNo,
         },
       });
       if (existInvoice) {
         throw new HttpException(
-          'invoice purchase already exist',
+          'invoice sales already exist',
           HttpStatus.BAD_REQUEST,
         );
       }
     } else {
-      invoiceNo = await this._sequence.generate('PRC');
+      invoiceNo = await this._sequence.generate('SLS');
     }
     const productIds = itemLines.map((item) => {
       return item.id;
@@ -63,12 +63,19 @@ export class PurchaseService {
 
     const mapItem: ProductItemResponseDto[] = [];
 
-    const purchaseDetail = itemLines.map((item) => {
+    const salesDetail = itemLines.map((item) => {
       const product = products.find((q) => q.id === item.id);
 
       if (!product) {
         throw new HttpException(
-          `failed create purchase, product with id ${item.id} not exist`,
+          `failed create sales, product with id ${item.id} not exist`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (product.stock < item.qty) {
+        throw new HttpException(
+          `failed create sales, stock product ${product.name} is insufficient`,
           HttpStatus.BAD_REQUEST,
         );
       }
@@ -104,23 +111,23 @@ export class PurchaseService {
       return m;
     });
 
-    const create = await this._prisma.purchase.create({
+    const create = await this._prisma.sales.create({
       data: {
         invoice_date: new Date(invoiceDate),
         note: note,
         created_by: userId,
         invoice_no: invoiceNo,
-        status: 'purchase',
+        status: 'sales',
         total: total,
         total_before_tax: totalBeforeTax,
-        purchase_detail: {
-          create: purchaseDetail,
+        sales_detail: {
+          create: salesDetail,
         },
       },
     });
 
     if (!create) {
-      throw new HttpException('failed create purchase', HttpStatus.BAD_REQUEST);
+      throw new HttpException('failed create sales', HttpStatus.BAD_REQUEST);
     }
 
     await Promise.all(
@@ -131,13 +138,13 @@ export class PurchaseService {
             id: x.id,
           },
           data: {
-            stock: currentStock + x.qty,
+            stock: currentStock - x.qty,
           },
         });
       }),
     );
 
-    const mapData: PurchaseResponseDto = {
+    const mapData: SalesResponseDto = {
       id: create.id,
       invoiceNo: invoiceNo,
       invoiceDate: invoiceDate,
@@ -147,19 +154,19 @@ export class PurchaseService {
       itemLines: mapItem,
     };
 
-    const res: CreatePurchaseResponse = {
+    const res: CreateSalesResponse = {
       data: mapData,
     };
     return res;
   }
 
   async findAll(userId: string) {
-    const data = await this._prisma.purchase.findMany({
+    const data = await this._prisma.sales.findMany({
       where: {
         created_by: userId,
       },
       include: {
-        purchase_detail: {
+        sales_detail: {
           include: {
             product: true,
           },
@@ -167,8 +174,8 @@ export class PurchaseService {
       },
     });
 
-    const map = data.map((purchase) => {
-      const mapItem = purchase.purchase_detail.map((detail) => {
+    const map = data.map((sales) => {
+      const mapItem = sales.sales_detail.map((detail) => {
         const mapResItem: ProductItemResponseDto = {
           id: detail.product.id,
           sku: detail.product.sku,
@@ -183,19 +190,19 @@ export class PurchaseService {
         return mapResItem;
       });
 
-      const mapData: PurchaseResponseDto = {
-        id: purchase.id,
-        invoiceNo: purchase.invoice_no,
-        invoiceDate: purchase.invoice_date.toISOString(),
-        note: purchase.note,
-        totalBeforeTax: +purchase.total_before_tax,
-        total: +purchase.total,
+      const mapData: SalesResponseDto = {
+        id: sales.id,
+        invoiceNo: sales.invoice_no,
+        invoiceDate: sales.invoice_date.toISOString(),
+        note: sales.note,
+        totalBeforeTax: +sales.total_before_tax,
+        total: +sales.total,
         itemLines: mapItem,
       };
       return mapData;
     });
 
-    const res: AllPurchaseResponse = {
+    const res: AllSalesResponse = {
       data: map,
     };
 
@@ -203,12 +210,12 @@ export class PurchaseService {
   }
 
   async findOne(id: string, userId: string) {
-    const data = await this._prisma.purchase.findFirst({
+    const data = await this._prisma.sales.findFirst({
       where: {
         id: id,
       },
       include: {
-        purchase_detail: {
+        sales_detail: {
           include: {
             product: true,
           },
@@ -217,20 +224,17 @@ export class PurchaseService {
     });
 
     if (!data) {
-      throw new HttpException(
-        'data purchase not found',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new HttpException('data sales not found', HttpStatus.BAD_REQUEST);
     }
 
     if (data.created_by != userId) {
       throw new HttpException(
-        'your not own the purchase data',
+        'your not own the sales data',
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    const mapItem = data.purchase_detail.map((detail) => {
+    const mapItem = data.sales_detail.map((detail) => {
       const mapResItem: ProductItemResponseDto = {
         id: detail.product.id,
         sku: detail.product.sku,
@@ -245,7 +249,7 @@ export class PurchaseService {
       return mapResItem;
     });
 
-    const mapData: PurchaseResponseDto = {
+    const mapData: SalesResponseDto = {
       id: data.id,
       invoiceNo: data.invoice_no,
       invoiceDate: data.invoice_date.toISOString(),
@@ -255,7 +259,7 @@ export class PurchaseService {
       itemLines: mapItem,
     };
 
-    const res: DetailPurchaseResponse = {
+    const res: DetailSalesResponse = {
       data: mapData,
     };
 
@@ -263,12 +267,12 @@ export class PurchaseService {
   }
 
   async void(id: string, userId: string) {
-    const data = await this._prisma.purchase.findFirst({
+    const data = await this._prisma.sales.findFirst({
       where: {
         id: id,
       },
       include: {
-        purchase_detail: {
+        sales_detail: {
           include: {
             product: true,
           },
@@ -277,24 +281,21 @@ export class PurchaseService {
     });
 
     if (!data) {
-      throw new HttpException(
-        'data purchase not found',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new HttpException('data sales not found', HttpStatus.BAD_REQUEST);
     }
 
     if (data.created_by != userId) {
       throw new HttpException(
-        'your not own the purchase data',
+        'your not own the sales data',
         HttpStatus.BAD_REQUEST,
       );
     }
 
     if (data.status === 'void') {
-      throw new HttpException('purchase already void', HttpStatus.BAD_REQUEST);
+      throw new HttpException('sales already void', HttpStatus.BAD_REQUEST);
     }
 
-    const productItem = data.purchase_detail.map((x) => {
+    const productItem = data.sales_detail.map((x) => {
       return {
         id: x.product_id,
         qty: x.qty,
@@ -302,7 +303,7 @@ export class PurchaseService {
       };
     });
 
-    const updatePurchase = await this._prisma.purchase.update({
+    const updateSales = await this._prisma.sales.update({
       where: {
         id: id,
       },
@@ -311,8 +312,8 @@ export class PurchaseService {
       },
     });
 
-    if (!updatePurchase) {
-      throw new HttpException('void purchase failed', HttpStatus.BAD_REQUEST);
+    if (!updateSales) {
+      throw new HttpException('void sales failed', HttpStatus.BAD_REQUEST);
     }
 
     await Promise.all(
@@ -322,13 +323,13 @@ export class PurchaseService {
             id: x.id,
           },
           data: {
-            stock: x.currentStock - x.qty,
+            stock: x.currentStock + x.qty,
           },
         });
       }),
     );
     return {
-      message: 'success void purchase',
+      message: 'success void sales',
     };
   }
 }

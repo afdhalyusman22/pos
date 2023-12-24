@@ -1,7 +1,7 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { CreateProductDto } from '../../product/dto/product.dto';
 
-export class CreatePurchaseDto {
+export class CreateSalesDto {
   @ApiProperty()
   invoiceNo: string;
   @ApiProperty()
@@ -24,21 +24,21 @@ export class ProductItemResponseDto extends PartialType(CreateProductDto) {
   qty: number;
 }
 
-export class PurchaseResponseDto extends PartialType(CreatePurchaseDto) {
+export class SalesResponseDto extends PartialType(CreateSalesDto) {
   id: string;
   totalBeforeTax: number;
   total: number;
   itemLines: ProductItemResponseDto[];
 }
 
-export class CreatePurchaseResponse {
-  data: PurchaseResponseDto;
+export class CreateSalesResponse {
+  data: SalesResponseDto;
 }
 
-export class DetailPurchaseResponse {
-  data: PurchaseResponseDto;
+export class DetailSalesResponse {
+  data: SalesResponseDto;
 }
 
-export class AllPurchaseResponse {
-  data: PurchaseResponseDto[];
+export class AllSalesResponse {
+  data: SalesResponseDto[];
 }
