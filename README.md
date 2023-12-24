@@ -1,12 +1,10 @@
 ## Description
 
-P.O.S Application using node 18x, NestJS 10x, PostgreSQL.
+P.O.S Application using NestJS 10x, node 18x, PostgreSQL 14.
 
 ## Migration
-* Execute sql script on file at migrations/initial.sql for create database and create table
-* Execute sql script on file at migrations/seeders/initial.sql for insert master data
-
-
+* For create database and create table, execute sql script initial.sql at migrations/initial.sql 
+* For insert master data, execute sql script initial.sql at migrations/seeders/initial.sql 
 
 ## Installation
 
