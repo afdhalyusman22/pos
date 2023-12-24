@@ -1,5 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateProductDto } from './dto/create-product.dto';
+import {
+  CreateProductDto,
+  ProductAllResponseDto,
+  ProductResponse,
+  ProductResponseDto,
+} from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -9,7 +14,9 @@ export class ProductService {
   constructor(private _prisma: PrismaService) {
     this.prisma = _prisma;
   }
-  async create(createProductDto: CreateProductDto) {
+  async create(
+    createProductDto: CreateProductDto,
+  ): Promise<ProductResponseDto> {
     const { sku, category, itemCost, itemName, itemPrice, taxId, uom } =
       createProductDto;
     const tax = await this.prisma.tax.findFirst({
@@ -42,33 +49,62 @@ export class ProductService {
         tax_id: taxId,
       },
     });
-    return {
+
+    const res: ProductResponseDto = {
       data: {
         id: product.id,
         ...createProductDto,
       },
     };
+    return res;
   }
 
-  async find(id: string) {
+  async find(id: string): Promise<ProductResponseDto> {
     const product = await this.prisma.product.findFirst({
       where: {
         id: id,
       },
     });
-    return {
-      data: product,
+    const res: ProductResponseDto = {
+      data: {
+        id: product.id,
+        sku: product.sku,
+        category: product.category,
+        itemCost: +product.item_cost,
+        itemPrice: +product.item_price,
+        itemName: product.name,
+        taxId: product.tax_id,
+        uom: product.uom,
+      },
     };
+    return res;
   }
 
-  async findAll() {
+  async findAll(): Promise<ProductAllResponseDto> {
     const products = await this.prisma.product.findMany();
-    return {
-      data: products,
+    const mapping = products.map((x) => {
+      const map: ProductResponse = {
+        id: x.id,
+        sku: x.sku,
+        category: x.category,
+        itemCost: +x.item_cost,
+        itemPrice: +x.item_price,
+        itemName: x.name,
+        taxId: x.tax_id,
+        uom: x.uom,
+      };
+      return map;
+    });
+    const res: ProductAllResponseDto = {
+      data: mapping,
     };
+    return res;
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto) {
+  async update(
+    id: string,
+    updateProductDto: UpdateProductDto,
+  ): Promise<ProductResponseDto> {
     const { category, itemCost, itemName, itemPrice, taxId, uom } =
       updateProductDto;
     const product = await this.prisma.product.findFirst({
@@ -94,12 +130,15 @@ export class ProductService {
         tax_id: taxId,
       },
     });
-    return {
+
+    const res: ProductResponseDto = {
       data: {
         id: update.id,
+        sku: update.sku,
         ...updateProductDto,
       },
     };
+    return res;
   }
 
   async remove(id: string) {

@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login-dto';
+import { RegisterDto, RegisterResponseDto } from './dto/register.dto';
+import { LoginDto, LoginResponseDto } from './dto/login-dto';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -18,7 +18,7 @@ export class UserService {
     this.bcrypt = bcrypt;
     this.jwtService = _jwtService;
   }
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto): Promise<RegisterResponseDto> {
     const saltOrRounds = 10;
     const { email, fullName, password, companyName } = registerDto;
     const emailLower = email.toLowerCase();
@@ -43,10 +43,14 @@ export class UserService {
       },
     });
 
-    return { data: { userId: createUser.user_id } };
+    const res: RegisterResponseDto = {
+      data: { userId: createUser.user_id },
+    };
+
+    return res;
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<LoginResponseDto> {
     const { email, password } = loginDto;
     const emailLower = email.toLowerCase();
     const user = await this.prisma.user.findFirst({
@@ -72,7 +76,7 @@ export class UserService {
     };
     const token = await this.jwtService.signAsync(payload);
 
-    const res = {
+    const res: LoginResponseDto = {
       accessToken: token,
       data: {
         userId: user.user_id,

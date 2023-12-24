@@ -8,3 +8,15 @@ export class LoginDto {
   @ApiProperty()
   password: string;
 }
+
+export class LoginResponse {
+  userId: string;
+  email: string;
+  fullName: string;
+  companyName: string;
+}
+
+export class LoginResponseDto {
+  accessToken: string;
+  data: LoginResponse;
+}

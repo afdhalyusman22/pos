@@ -7,3 +7,10 @@ export class RegisterDto extends PartialType(LoginDto) {
   @ApiProperty()
   companyName: string;
 }
+
+export class RegisterResponse {
+  userId: string;
+}
+export class RegisterResponseDto {
+  data: RegisterResponse;
+}

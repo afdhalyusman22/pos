@@ -8,8 +8,8 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login-dto';
+import { RegisterDto, RegisterResponseDto } from './dto/register.dto';
+import { LoginDto, LoginResponseDto } from './dto/login-dto';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '../utils/auth-guard/auth-guard';
 
@@ -20,13 +20,15 @@ export class UserController {
 
   @Post('/register')
   @HttpCode(200)
-  async register(@Body() registerDto: RegisterDto) {
+  async register(
+    @Body() registerDto: RegisterDto,
+  ): Promise<RegisterResponseDto> {
     return await this.userService.register(registerDto);
   }
 
   @Post('/login')
   @HttpCode(200)
-  async login(@Body() loginDto: LoginDto) {
+  async login(@Body() loginDto: LoginDto): Promise<LoginResponseDto> {
     return await this.userService.login(loginDto);
   }
 
