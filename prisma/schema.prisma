@@ -44,6 +44,57 @@ model Product {
   stock Int? @default(0)
   created_by String 
   created_at DateTime @default(now())
-  tax Tax @relation(fields: [tax_id], references: [id])
   tax_id String
+  tax Tax @relation(fields: [tax_id], references: [id])
+  purchase_detail PurchaseDetail[]
+  sales_detail SalesDetail[]
+}
+
+model Purchase {
+  id String @default(uuid()) @id
+  invoice_no String
+  invoice_date DateTime
+  note String
+  total_before_tax Decimal
+  total Decimal
+  status String
+  created_by String 
+  created_at DateTime @default(now())
+  purchase_detail PurchaseDetail[]
+}
+
+model PurchaseDetail {
+  id String @default(uuid()) @id
+  purchase_id String
+  product_id String
+  qty Int  
+  item_price Decimal
+  total_before_tax Decimal
+  total Decimal
+  purchase Purchase @relation(fields: [purchase_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
+}
+model Sales {
+  id String @default(uuid()) @id
+  invoice_no String
+  invoice_date DateTime
+  note String
+  total_before_tax Decimal
+  total Decimal
+  status String
+  created_by String 
+  created_at DateTime @default(now())
+  sales_detail SalesDetail[]
+}
+
+model SalesDetail {
+  id String @default(uuid()) @id
+  sales_id String
+  product_id String
+  qty Int
+  item_price Decimal
+  total_before_tax Decimal
+  total Decimal
+  sales Sales @relation(fields: [sales_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
 }

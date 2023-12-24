@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './utils/constants';
 import { ProductModule } from './product/product.module';
 import { SequenceModule } from './sequence/sequence.module';
+import { PurchaseModule } from './purchase/purchase.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { SequenceModule } from './sequence/sequence.module';
     }),
     ProductModule,
     SequenceModule,
+    PurchaseModule,
   ],
   controllers: [AppController],
   providers: [AppService],

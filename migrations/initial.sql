@@ -40,3 +40,45 @@ CREATE TABLE public."Sequence" (
 	created_at timestamp not null,
 	CONSTRAINT sequence_pkey PRIMARY KEY (id)
 );
+
+CREATE TABLE public."Purchase" (
+	id uuid NOT NULL,
+	"invoice_no" text NOT NULL,
+	"invoice_date" timestamp NOT NULL,
+	"note" text NOT NULL,
+	total_before_tax decimal NOT NULL,
+	total decimal NOT NULL,	
+	"status" text not null,
+	created_by text not null,
+	created_at timestamp not null,
+	CONSTRAINT purchase_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public."PurchaseDetail" (
+	id uuid not null,
+	"purchase_id" uuid not null REFERENCES public."Purchase"(id),
+	"product_id" uuid not null REFERENCES public."Product"(id),
+	qty int NOT NULL,
+	CONSTRAINT purchase_detail_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public."Sales" (
+	id uuid NOT NULL,
+	"invoice_no" text NOT NULL,
+	"invoice_date" timestamp NOT NULL,
+	"note" text NOT NULL,
+	total_before_tax decimal NOT NULL,
+	total decimal NOT NULL,	
+	"status" text not null,
+	created_by text not null,
+	created_at timestamp not null,
+	CONSTRAINT sales_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public."SalesDetail" (
+	id uuid not null,
+	"sales_id" uuid not null REFERENCES public."Sales"(id),
+	"product_id" uuid not null REFERENCES public."Product"(id),
+	qty int NOT NULL,
+	CONSTRAINT sales_detail_pkey PRIMARY KEY (id)
+);

@@ -2,10 +2,10 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   CreateProductDto,
   ProductAllResponseDto,
+  UpdateProductDto,
   ProductResponse,
   ProductResponseDto,
-} from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+} from './dto/product.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { SequenceService } from 'src/sequence/sequence.service';
 
@@ -191,6 +191,29 @@ export class ProductService {
     if (product.created_by != userId) {
       throw new HttpException(
         'your not own the product',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const checkPurchase = await this._prisma.purchaseDetail.findFirst({
+      where: {
+        product_id: id,
+      },
+    });
+    if (checkPurchase) {
+      throw new HttpException(
+        'cannot remove product because already use for purchase',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const checkSales = await this._prisma.salesDetail.findFirst({
+      where: {
+        product_id: id,
+      },
+    });
+    if (checkSales) {
+      throw new HttpException(
+        'cannot remove product because already use for sales',
         HttpStatus.BAD_REQUEST,
       );
     }
