@@ -17,8 +17,6 @@ CREATE TABLE public."Tax" (
 	CONSTRAINT tax_pkey PRIMARY KEY (id)
 );
 
-
-
 CREATE TABLE public."Product" (
 	id uuid NOT NULL,
 	"name" text NOT NULL,
@@ -27,8 +25,9 @@ CREATE TABLE public."Product" (
 	category text NOT NULL,
 	item_cost numeric NOT NULL,
 	item_price numeric NOT NULL,
-	stock numeric NOT NULL,
-	tax_id uuid NOT NULL,
-	CONSTRAINT product_pkey PRIMARY KEY (id),
-	CONSTRAINT fk_prdtax FOREIGN KEY(tax_id) REFERENCES public."Tax"(id)
+	stock numeric null,
+	tax_id uuid NOT null REFERENCES public."Tax"(id),
+	created_by text not null,
+	created_at timestamp not null,
+	CONSTRAINT product_pkey PRIMARY KEY (id)
 );

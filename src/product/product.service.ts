@@ -16,6 +16,7 @@ export class ProductService {
   }
   async create(
     createProductDto: CreateProductDto,
+    userId: string,
   ): Promise<ProductResponseDto> {
     const { sku, category, itemCost, itemName, itemPrice, taxId, uom } =
       createProductDto;
@@ -47,6 +48,7 @@ export class ProductService {
         item_cost: itemCost,
         item_price: itemPrice,
         tax_id: taxId,
+        created_by: userId,
       },
     });
 
@@ -59,12 +61,23 @@ export class ProductService {
     return res;
   }
 
-  async find(id: string): Promise<ProductResponseDto> {
+  async find(id: string, userId: string): Promise<ProductResponseDto> {
     const product = await this.prisma.product.findFirst({
       where: {
         id: id,
       },
     });
+
+    if (!product) {
+      throw new HttpException('product not found', HttpStatus.BAD_REQUEST);
+    }
+
+    if (product.created_by != userId) {
+      throw new HttpException(
+        'your not own the product',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     const res: ProductResponseDto = {
       data: {
         id: product.id,
@@ -80,8 +93,12 @@ export class ProductService {
     return res;
   }
 
-  async findAll(): Promise<ProductAllResponseDto> {
-    const products = await this.prisma.product.findMany();
+  async findAll(userId: string): Promise<ProductAllResponseDto> {
+    const products = await this.prisma.product.findMany({
+      where: {
+        created_by: userId,
+      },
+    });
     const mapping = products.map((x) => {
       const map: ProductResponse = {
         id: x.id,
@@ -104,6 +121,7 @@ export class ProductService {
   async update(
     id: string,
     updateProductDto: UpdateProductDto,
+    userId: string,
   ): Promise<ProductResponseDto> {
     const { category, itemCost, itemName, itemPrice, taxId, uom } =
       updateProductDto;
@@ -115,6 +133,13 @@ export class ProductService {
 
     if (!product) {
       throw new HttpException('product id not found', HttpStatus.BAD_REQUEST);
+    }
+
+    if (product.created_by != userId) {
+      throw new HttpException(
+        'your not own the product',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const update = await this.prisma.product.update({
@@ -141,7 +166,7 @@ export class ProductService {
     return res;
   }
 
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
     const product = await this.prisma.product.findFirst({
       where: {
         id: id,
@@ -150,6 +175,13 @@ export class ProductService {
 
     if (!product) {
       throw new HttpException('product id not found', HttpStatus.BAD_REQUEST);
+    }
+
+    if (product.created_by != userId) {
+      throw new HttpException(
+        'your not own the product',
+        HttpStatus.BAD_REQUEST,
+      );
     }
     const remove = await this.prisma.product.delete({
       where: {

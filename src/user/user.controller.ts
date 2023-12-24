@@ -10,7 +10,7 @@ import {
 import { UserService } from './user.service';
 import { RegisterDto, RegisterResponseDto } from './dto/register.dto';
 import { LoginDto, LoginResponseDto } from './dto/login-dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '../utils/auth-guard/auth-guard';
 
 @ApiTags('user')
@@ -33,6 +33,7 @@ export class UserController {
   }
 
   @UseGuards(AuthGuard)
+  @ApiBearerAuth()
   @Get('profile')
   @HttpCode(200)
   getProfile(@Request() req) {

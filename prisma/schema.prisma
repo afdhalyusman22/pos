@@ -34,6 +34,8 @@ model Product {
   item_cost Decimal
   item_price Decimal
   stock Int? @default(0)
+  created_by String 
+  created_at DateTime @default(now())
   tax Tax @relation(fields: [tax_id], references: [id])
   tax_id String
 }

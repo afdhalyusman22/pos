@@ -9,6 +9,7 @@ async function bootstrap() {
     .setTitle('P.O.S')
     .setDescription('POS API description')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
 
